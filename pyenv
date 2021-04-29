@@ -1,0 +1,15 @@
+---
+tags: [ pyenv, python, install ]
+---
+
+# When failing to install Python version
+If error is like: "ERROR: The Python ssl extension was not compiled. Missing the OpenSSL lib?"
+Try uninstalling OpenSSL from Homebrew, installing again and installing Python.
+Source: https://github.com/pyenv/pyenv/issues/993#issuecomment-333452008
+
+brew uninstall openssl --ignore-dependencies
+sudo rm -rf /usr/local/Cellar/openssl*        # Fix for when Root owns the directory
+brew install openssl
+
+CFLAGS="-I$(brew --prefix openssl)/include" LDFLAGS="-L$(brew --prefix openssl)/lib" pyenv install 3.8.5
+
