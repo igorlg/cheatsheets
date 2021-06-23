@@ -1,0 +1,45 @@
+---
+tags: [ make ]
+---
+# To generate targets from an array, in this case FILES = ...
+.PHONY: clean list import
+.DEFAULT_GOAL: all
+
+FILES = atuin autojump direnv goenv jenv nodenv pipx pyenv rbenv rust
+
+all: clean $(foreach f, $(FILES), target/$(f).zsh)
+
+target/%.zsh: %
+	@./$< $@
+	@echo "Done $@" >&2
+
+import: $(foreach f, $(FILES), target/$(f).zsh)
+	@for f in $(FILES); do \
+		echo "source target/$${f}.zsh"; \
+		done \
+		| sort
+
+# Makefile Default target
+target1:
+    $(info Target 1)
+
+target2:
+    $(info Target 2)
+
+target3:
+    $(info Target 3)
+
+.PHONY: target1 target2 target3
+.DEFAULT_GOAL := target2
+
+# Check if variable required is defined
+
+check_defined = \
+    $(strip $(foreach 1,$1, \
+        $(call __check_defined,$1,$(strip $(value 2)))))
+
+__check_defined = \
+    $(if $(value $1),, \
+        $(error Undefined $1$(if $2, ($2))$(if $(value @), \
+        required by target `$@')))
+

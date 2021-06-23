@@ -1,0 +1,7 @@
+---
+tags: [ macos, automation ]
+---
+# List available domains, in lines
+defaults domains | tr ", " '\n' | grep -v "^$" | sort
+
+

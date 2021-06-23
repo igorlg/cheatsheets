@@ -1,0 +1,23 @@
+---
+tags: [ aws, cloudfront, lambda, nodejs ]
+---
+# CloudFront Function: Add country code to URI
+function handler(event) {
+    const request = event.request;
+    const defaultCountryCode = 'en';
+    const supportedCountries = ['en', 'de', 'it', 'fr'];
+    // Check if the country code is already passed in the URI (e.g. /en/xxx.txt), and is in the supported list.
+    if (supportedCountries.include(request.uri.substr(1, 2)))
+        return request;
+    // Get the countryCode value from CF Headers, empty string if not found.
+    const countryCode = (request.headers['cloudfront-viewer-country'] || { value: '' }).value.toLowerCase();
+    // Assemble the new URI, using countryCode if it is part of supportedCountries, defaultCountryCode otherwise.
+    const newUri = '/' + (supportedCountries.find((e) => e === countryCode) || defaultCountryCode) + request.uri;
+
+    return {
+        statusCode: 302,
+        statusDescription: 'Found',
+        headers: { "location": { "value": newUri } }
+    };
+}
+

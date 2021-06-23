@@ -1,0 +1,23 @@
+---
+tags: [ linux, bash, zsh ]
+---
+# Show IP on Linux login screen
+Create file: /etc/rc.d/show_ip_login.sh:
+#!/bin/bash
+echo "CentOS release 6.5 (Final)" > /etc/issue
+echo "Kernel \r on an \m" >> /etc/issue
+echo "" >> /etc/issue
+IP=`ip address show eth0 | awk '/inet / {print $2}' | cut -d/ -`
+HOST=`hostname`
+echo "${HOST} (${IP})" >> /etc/issue
+rm -rf /etc/udev/rules.d/70-persistent-net.rules
+## Add following line to /etc/rc.d/rc.local
+/etc/rc.d/show_ip_login.sh
+## Run following command:
+chmod +x /etc/rc.d/rc.local /etc/rc.d/show_ip_login.sh
+
+
+# Edit /etc/sudoers from a script
+## This will prompt for a password...
+echo 'igor  ALL=(ALL) NOPASSWD: ALL' | sudo EDITOR='tee -a' visudo
+

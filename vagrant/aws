@@ -1,0 +1,26 @@
+---
+tags: [ vagrant, aws ]
+---
+# Vagrantfile for AWS (using https://github.com/mitchellh/vagrant-aws)
+Vagrant.configure('2') do |config|
+    config.vm.box = 'dummy'
+
+    config.vm.synced_folder '.', '/vagrant', type: 'rsync'
+
+    config.vm.provider :aws do |aws, override|
+        aws.ami = AMI_ID
+        aws.instance_type = INSTANCE_TYPE
+        aws.security_groups = [SG_NAME]
+        aws.iam_instance_profile_name = IAM_ROLE_NAME
+        aws.keypair_name = KEY_NAME
+
+        override.ssh.username = 'ubuntu'
+    end
+
+    config.vm.provision 'shell', inline: <<-SHELL
+        # Base
+        apt-get update
+        apt-get install -y htop vim git curl wget tree zip unzip
+    SHELL
+end
+

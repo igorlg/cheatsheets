@@ -1,0 +1,49 @@
+---
+tags: [ python ]
+---
+# Simple example implementation of Mondas in Python
+# Source: https://medium.com/swlh/monads-in-python-e3c9592285d6
+
+class Monad:
+    def __init__(self, value, failed=False):
+        self.value = value
+        self.failed = failed
+
+    def get(self):
+        return self.value
+
+    def is_failed(self):
+        return self.failed
+
+    def __str__(self):
+        return '{} ({})'.format(self.get(), self.is_failed())
+
+    def __or__(self, f):
+        return self.bind(f)
+
+    def bind(self, f):
+        if self.is_failed():
+            return self
+
+        try:
+            x = f(self.get())
+            return Monad(x)
+        except:
+            return Monad(None, True)
+
+# example:
+from operator import neg
+
+x = 123
+y = Monad(x).bind(int).bind(neg).bind(str)
+print(y)
+# > '-123'
+
+x = 234
+y = Monad(x) | int | neg | str
+# > '-234'
+
+x = 'abc'
+y = Monad(x) | int | neg | str
+# > 'None (True)'
+

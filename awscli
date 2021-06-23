@@ -1,0 +1,77 @@
+---
+tags: [ aws, awscli ]
+---
+# Use EC2 Instance Metadata as Credential Source in AWS CLI
+#   Source: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-metadata.html
+[profile profilename]
+role_arn = arn:aws:iam::123456789012:role/rolename
+credential_source = Ec2InstanceMetadata
+region = region
+
+# Get Security Group Name : ID
+aws ec2 describe-security-groups \
+| jq '.SecurityGroups[] | {(.GroupName): .GroupId}' \
+| grep -v '{\|}' \
+| sort
+
+
+# Get Instance Name : Private IP
+aws ec2 describe-instances \
+    --query 'Reservations[*].Instances[*].[Tags[?Key==`Name`].Value|[0],PrivateIpAddress]' \
+    --filters Name=instance-state-name,Values=running \
+| jq '.[][0] | {(.[0]): .[1]}' 2>/dev/null \
+| egrep -v '\{|\}' \
+| sed 's/\"//g' \
+| grep -i sap \
+| sort
+
+
+# Get Instance Name : { Private IP : State }
+aws ec2 describe-instances \
+    --query 'Reservations[*].Instances[*].[Tags[?Key==`Name`].Value|[0],PrivateIpAddress,State.Name]' \
+| jq '.[][0] | {(.[0]): .[1]}' 2>/dev/null \
+| egrep -v '\{|\}' \
+| sed 's/\"//g' \
+| grep -i sap \
+| sort
+
+
+# Get EBS Snapshots : Volume ID
+aws ec2 describe-snapshots \
+    --output json \
+    --query 'Snapshots[*].[SnapshotId,VolumeId]' \
+| jq '.[] | {(.[1]): .[0]}' \
+| egrep -v '\{|\}' \
+
+
+# Get Volume Name: Volume Id
+aws ec2 describe-volumes \
+    --output json \
+    --query 'Volumes[*].[Tags[?Key==`Name`].Value|[0],VolumeId]' \
+| jq '.[] | {(.[1]): .[0]}' \
+| egrep -v '\{|\}' \
+
+
+# Get Volume Name: { Size: Volume Size, Type: Volume Type }
+aws ec2 describe-volumes \
+    --query 'Volumes[*].{Name:Tags[?Key==`Name`].Value,Size:Size,Type:VolumeType}' \
+| sed 's/null,/["Null"],/' \
+| jq '.[] | {(.Name[0]): .Size}' \
+| grep -v '{\|}' \
+| tr -d '"' \
+| sed 's/: /,/' \
+| awk '{ print $1 }' \
+
+
+# Get Windows password data from instance
+aws ec2 get-password-data \
+  --instance-id i-066bc34c91fd9d400 \<p></p>
+  --priv-launch-key ~/.ssh/path-to-private-key.pem \
+| jq '.PasswordData' \
+| tr -d '"'
+
+
+# Sum up the size of all EBS Volumes
+aws ec2 describe-volumes \
+  --query 'sum(Volumes[].Size)'
+

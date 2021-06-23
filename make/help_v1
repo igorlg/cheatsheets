@@ -1,0 +1,33 @@
+---
+tags: [ make ]
+---
+# Makefile auto-generate Help messages
+
+# V1
+
+# This Makefile target parses the Makefiles for targets and displays them with the inline comments.
+# Also, it parses for defined Options, if you document them, e.g.
+
+#Option: ## DOCKER=(TRUE|FALSE): ## When defined, runs build as Docker containers. Defaults as FALSE
+
+.PHONY: target1 target2 clean build
+
+target1: ## This target does X
+    @echo "X"
+
+target2:
+    @echo "This target is not displayed in Help, as it does not have a comment next to it"
+
+clean: ## Clean all temporary and build files
+
+build: clean target1 target2 ## Runs the Build. Even targets with dependencies are shown if the comment is present
+
+
+.PHONY: help
+
+help:
+    @echo "Targets:"; echo
+    @grep -E '^[a-zA-Z1-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+    @echo; echo "Options:"; echo
+    @grep -E '^#Option: .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ": ## "}; {printf "\033[36m%-30s\033[0m %s\n", $$2, $$3}'
+
